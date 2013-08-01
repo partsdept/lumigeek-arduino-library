@@ -9,7 +9,7 @@ void setup() {
  
   // create a reference to our shield with its current DIP switch setting 
 
-  lumigeekShield = LumiGeek4xRGB(1);  
+  lumigeekShield = LumiGeek4xRGB(1);  // check the DIP switches on your shield, default should be 0 
  
   // setup some periodic/automated behaviors with just one call
   
