@@ -225,8 +225,9 @@ class LumiGeekHelper  {
 		uint8_t write(uint8_t, uint8_t);
 		uint8_t write(uint8_t, uint8_t, uint8_t*, uint16_t);
 	   
-    LumiGeek4xRGB addShield4xRGB(uint8_t dip); 
-    LumiGeek3xCC addShield3xCC(uint8_t dip); 
+    // Explore this way of constructing the shield objects later on after talking to JJ 
+    // LumiGeek4xRGB addShield4xRGB(uint8_t dip); 
+    // LumiGeek3xCC addShield3xCC(uint8_t dip); 
      
 };
 

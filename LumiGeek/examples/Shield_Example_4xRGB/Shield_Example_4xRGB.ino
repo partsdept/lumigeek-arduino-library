@@ -9,7 +9,7 @@ void setup() {
   LumiGeek.setDebug(true);
 
   // get a new reference to a shield with dip switches = 0x1
-  lg4xRGB = LumiGeek.addShield4xRGB(1); 
+  lg4xRGB = LumiGeek4xRGB(1); 
 
   // blackout any old header settings and wait one second
   lg4xRGB.blackout();
@@ -24,4 +24,3 @@ void loop() {
   lg4xRGB.jumpHeaderToRGB(3,random() % 200,0,random() % 200); 
   delay(3000);
 }
-

@@ -837,8 +837,9 @@ uint8_t LumiGeekHelper::stop() {
   return(0);
 }
 
-LumiGeek4xRGB LumiGeekHelper::addShield4xRGB(uint8_t dip) {
-  return LumiGeek4xRGB(dip);
-}
+// Explore this way of constructing the shield objects later on after talking to JJ 
+// LumiGeek4xRGB LumiGeekHelper::addShield4xRGB(uint8_t dip) {
+  // return LumiGeek4xRGB(dip);
+// }
 
 LumiGeekHelper LumiGeek = LumiGeekHelper();
