@@ -49,14 +49,9 @@ LumiGeekShield::LumiGeekShield(uint8_t i2cOffset,uint8_t productId) {
 }
 
 bool LumiGeekShield::assertProductMatchesI2cAddress(uint8_t productId) {
-  uint8_t queryResult[2];
-  
-  // TODO: eventually remove this faking of the results of the I2C product query
-  queryResult[0] = LG_4XRGB;
-  queryResult[1] = 0x02;
-
-  // TODO: uncomment this line as soon as the query command is live in the shield firmware  
-  //LumiGeek.read(i2cAddress(),LG_GLOBAL_CMD_QUERY,queryResult,2);
+  uint8_t queryResult[1];
+  queryResult[0] = 0x0;
+  LumiGeek.read(i2cAddress(),LG_GLOBAL_CMD_QUERY,queryResult,1);
   
   if (queryResult[0] == productId) {
     _productId = queryResult[0];

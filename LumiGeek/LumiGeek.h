@@ -220,6 +220,7 @@ class LumiGeekHelper  {
 		void testPattern();
 		void blackout();
 		
+    uint8_t read(uint8_t, uint8_t, uint8_t);
     uint8_t read(uint8_t, uint8_t, uint8_t*, uint8_t);
     
 		uint8_t write(uint8_t, uint8_t);

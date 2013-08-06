@@ -39,13 +39,16 @@
 // ----------------------------------------------------------------------------------------------------
 // LumiGeek Shield Product IDs
 	
-#define LG_4XRGB 0x20				// 4X RGB Strip Shield		
-#define LG_1XRGBMEGA 0x21			// 1X RGB Mega Strip Shield	
-#define LG_3XCC_1W 0x22				// 3X CC 1W Shield	
-#define LG_1XADDR 0x30				// 1X Addressable MultiTool  	
-#define LG_5X7_HEADLIGHT 0x31		// 5x7 Headlight
-#define LG_24XMONO 0x40				// 24X Mono LED Shield
-#define LG_1XDMX 0x70				// 1X DMX Universe Generator	
+#define LG_4XRGB 0x20				    // 4X RGB Strip Shield		
+#define LG_1XRGBMEGA 0x22			  // 1X RGB Mega Strip Shield	
+#define LG_3XCC_1W 0x23				  // 3X CC 1W Shield	
+#define LG_24XMONO 0x1F				  // 24X Mono LED Shield
+
+// TODO: get these product IDs from JoeJoe
+
+#define LG_1XDMX 0x00				    // 1X DMX Universe Generator	
+#define LG_5X7_HEADLIGHT 0x00	  // 5x7 Headlight
+#define LG_1XADDR 0x00				  // 1X Addressable MultiTool  	
 
 // ----------------------------------------------------------------------------------------------------
 // LumiGeek Global Commands
