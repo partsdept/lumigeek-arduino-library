@@ -24,10 +24,13 @@ class LumiGeekShield {
 		void testPattern();
 		uint8_t i2cAddress();
   protected:
-		LumiGeekShield(uint8_t  i2cOffset);
+		LumiGeekShield(uint8_t  i2cOffset, uint8_t productId);
     bool assertOffsetValue(uint8_t i2cOffset);
     bool assertSanityCheck();
+    bool assertProductMatchesI2cAddress(uint8_t productId);
     uint8_t _i2cOffset;  // NOTE: tried to use uint8_t but got an ambiguous compiler error.  Weird.
+    uint8_t _productId;
+    uint8_t _firmwareVersion;    
 };
 
 // ---------------------------------------------------------------------------
@@ -38,8 +41,8 @@ class LumiGeekShield {
 
 class LumiGeekRGB : public LumiGeekShield {
 	public:
-		LumiGeekRGB(uint8_t addr) : LumiGeekShield(addr) {
-			_i2cOffset = addr;
+		LumiGeekRGB(uint8_t offset,uint8_t product) : LumiGeekShield(offset,product) {
+			_i2cOffset = offset;
 		};
 		void genericJumpHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b);
 		void genericFadeHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
@@ -56,8 +59,8 @@ class LumiGeekRGB : public LumiGeekShield {
 
 class LumiGeek4xRGB : public LumiGeekRGB {
 	public:
-		LumiGeek4xRGB() : LumiGeekRGB(0) {};
-		LumiGeek4xRGB(uint8_t addr) : LumiGeekRGB(addr) {};
+		LumiGeek4xRGB() : LumiGeekRGB(0,LG_4XRGB) {};
+		LumiGeek4xRGB(uint8_t addr) : LumiGeekRGB(addr,LG_4XRGB) {};
     bool assertHeaderValue(uint8_t header);
 		void jumpHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b);
 		void fadeHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
@@ -73,8 +76,8 @@ class LumiGeek4xRGB : public LumiGeekRGB {
 
 class LumiGeek1xRGBMega : public LumiGeekRGB {
 	public:
-		LumiGeek1xRGBMega() : LumiGeekRGB(0) {};
-		LumiGeek1xRGBMega(uint8_t addr) : LumiGeekRGB(addr) {};
+		LumiGeek1xRGBMega() : LumiGeekRGB(0,LG_1XRGBMEGA) {};
+		LumiGeek1xRGBMega(uint8_t addr) : LumiGeekRGB(addr,LG_1XRGBMEGA) {};
 		void jumpToRGB(uint8_t r, uint8_t g, uint8_t b);
 		void fadeToRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
 		void autoJumpBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
@@ -89,8 +92,8 @@ class LumiGeek1xRGBMega : public LumiGeekRGB {
 
 class LumiGeek3xCC : public LumiGeekRGB {
 	public:
-		LumiGeek3xCC() : LumiGeekRGB(0) {};
-		LumiGeek3xCC(uint8_t addr) : LumiGeekRGB(addr) {};
+		LumiGeek3xCC() : LumiGeekRGB(0,LG_1XRGBMEGA) {};
+		LumiGeek3xCC(uint8_t offset) : LumiGeekRGB(offset,LG_1XRGBMEGA) {};
 		void jumpToRGB(uint8_t r, uint8_t g, uint8_t b);
 		void fadeToRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
 		void autoJumpBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
@@ -107,7 +110,7 @@ class LumiGeek3xCC : public LumiGeekRGB {
 
 class LumiGeekAddressable : public LumiGeekShield {
 	public:
-		LumiGeekAddressable(uint8_t addr) : LumiGeekShield(addr) {};   
+		LumiGeekAddressable(uint8_t offset,uint8_t product) : LumiGeekShield(offset,product) {};   
 		void setMode(uint8_t mode);
 		void drawGradient(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t length);
 		void drawComet(uint8_t r, uint8_t g, uint8_t b, uint8_t cometLength, uint8_t tailLength, uint8_t speed);
@@ -125,8 +128,8 @@ class LumiGeekAddressable : public LumiGeekShield {
 // ---------------------------------------------------------------------------
 
 class Addressable1XMultiTool : public LumiGeekAddressable {
-	Addressable1XMultiTool(uint8_t addr) : LumiGeekAddressable(addr) {};   
-	Addressable1XMultiTool() : LumiGeekAddressable(0) {};
+	Addressable1XMultiTool(uint8_t offset) : LumiGeekAddressable(offset,LG_1XADDR) {};   
+	Addressable1XMultiTool() : LumiGeekAddressable(0,LG_1XADDR) {};
 	void setMode(uint8_t mode);
 	void drawGradient(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t length);
 	void drawComet(uint8_t r, uint8_t g, uint8_t b, uint8_t cometLength, uint8_t tailLength, uint8_t speed);
@@ -144,8 +147,7 @@ class Addressable1XMultiTool : public LumiGeekAddressable {
 // ---------------------------------------------------------------------------
 
 class LumiGeek5x7Headlight : public LumiGeekAddressable {
-	LumiGeek5x7Headlight(uint8_t addr) : LumiGeekAddressable(addr) {};   
-	LumiGeek5x7Headlight() : LumiGeekAddressable(0) {};  
+	LumiGeek5x7Headlight() : LumiGeekAddressable(15,LG_5X7_HEADLIGHT) {};  
 	void draw2DFrame(uint8_t pixelRGBs[5][7][3]);
 };
 
@@ -158,11 +160,12 @@ class LumiGeek5x7Headlight : public LumiGeekAddressable {
 
 class LumiGeek1xDMX : public LumiGeekShield {
 	public:
-		LumiGeek1xDMX() : LumiGeekShield(0) {};
-		LumiGeek1xDMX(uint8_t addr) : LumiGeekShield(addr) {};
+		LumiGeek1xDMX() : LumiGeekShield(0,LG_1XDMX) {};
+		LumiGeek1xDMX(uint8_t offset) : LumiGeekShield(offset,LG_1XDMX) {};
 		void setDataStartingAtAddressWithRGB(uint8_t address, uint8_t r, uint8_t g, uint8_t b);
 		void setEntireUniverse(uint8_t universe[]);  // does not work with the Wire library... only with modified I2C Rev5 library
 };
+
 
 
 // ---------------------------------------------------------------------------
@@ -217,6 +220,8 @@ class LumiGeekHelper  {
 		void testPattern();
 		void blackout();
 		
+    uint8_t read(uint8_t, uint8_t, uint8_t*, uint8_t);
+    
 		uint8_t write(uint8_t, uint8_t);
 		uint8_t write(uint8_t, uint8_t, uint8_t*, uint16_t);
 	   

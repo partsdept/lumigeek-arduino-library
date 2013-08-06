@@ -17,12 +17,55 @@
 // Calls the superclass constructor with the appropriate I2C address
 // ---------------------------------------------------------------------------
 
-LumiGeekShield::LumiGeekShield(uint8_t i2cOffset) {
-  Serial.println("Constructor was called.");
+LumiGeekShield::LumiGeekShield(uint8_t i2cOffset,uint8_t productId) {
   if (assertOffsetValue(i2cOffset)) {
-    _i2cOffset = i2cOffset;
+    _i2cOffset = i2cOffset;    
+  } else {
+    if (LumiGeek.debug()) {
+      Serial.println("Bad dip switch value in shield constructor.  Must be in range 0-15.");
+    }
+    LumiGeek.setInitialized(false);
+  }
+  if (assertProductMatchesI2cAddress(productId)) {
+    if (LumiGeek.debug()) {
+      Serial.print("Shield at dip switch setting 0x");
+      Serial.print(_i2cOffset,HEX);
+      Serial.print(" is product ID 0x");
+      Serial.print(_productId,HEX);
+      Serial.print(" with firmware v");
+      Serial.println(_firmwareVersion);
+    }
   } else {
     LumiGeek.setInitialized(false);
+    if (LumiGeek.debug()) {
+      Serial.print("ERROR: Shield at dip switch setting 0x");
+      Serial.print(_i2cOffset,HEX);
+      Serial.print(" does not match product ID 0x");
+      Serial.print(_productId,HEX);
+      Serial.print(".  Check your dip switches and your constructor call.");
+      Serial.println(_firmwareVersion,HEX);
+    }
+  }
+}
+
+bool LumiGeekShield::assertProductMatchesI2cAddress(uint8_t productId) {
+  uint8_t queryResult[2];
+  
+  // TODO: eventually remove this faking of the results of the I2C product query
+  queryResult[0] = LG_4XRGB;
+  queryResult[1] = 0x02;
+
+  // TODO: uncomment this line as soon as the query command is live in the shield firmware  
+  //LumiGeek.read(i2cAddress(),LG_GLOBAL_CMD_QUERY,queryResult,2);
+  
+  if (queryResult[0] == productId) {
+    _productId = queryResult[0];
+    _firmwareVersion = queryResult[1];
+    return true;
+  } else {
+    _productId = 0;
+    _firmwareVersion = 0;
+    return false;
   }
 }
 
@@ -30,7 +73,7 @@ bool LumiGeekShield::assertSanityCheck() {
   // do a very simple sanity check right now
   if (!LumiGeek.initialized()) {
     if (LumiGeek.debug()) {
-      Serial.println("Failed LumiGeek sanity check.  Make sure you called LumiGeek.begin() and your dip switches on the shields match your shield creation params.");
+      Serial.println("ERROR: Failed sanity check. Make sure you called LumiGeek.begin() and set your dip switches properly to match your shield constructors.");
     }
     return false;
   }
@@ -128,6 +171,7 @@ void LumiGeekRGB::genericAutoFadeHeaderToRandomRGBs(uint8_t header, uint8_t spee
 // ---------------------------------------------------------------------------
 // Methods for 4xRGB... same RGB macros, but assert header is [1..4]
 // ---------------------------------------------------------------------------
+
 
 bool LumiGeek4xRGB::assertHeaderValue(uint8_t header) {
   if (header == 0) {
@@ -560,6 +604,64 @@ void LumiGeekHelper::scan() {
   timeOutDelay = tempTime;
 }
 
+uint8_t LumiGeekHelper::read(uint8_t address, uint8_t registerAddress, uint8_t *data, uint8_t numberBytes) {
+  bytesAvailable = 0;
+  bufferIndex = 0;
+  if(numberBytes == 0){numberBytes++;}
+  nack = numberBytes - 1;
+  returnStatus = 0;
+  returnStatus = start();
+  if(returnStatus){return(returnStatus);}
+  returnStatus = sendAddress(SLA_W(address));
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(2);}
+    return(returnStatus);
+  }
+  returnStatus = sendByte(registerAddress);
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(3);}
+    return(returnStatus);
+  }
+  returnStatus = start();
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(4);}
+    return(returnStatus);
+  }
+  returnStatus = sendAddress(SLA_R(address));
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(5);}
+    return(returnStatus);
+  }
+  for(uint8_t i = 0; i < numberBytes; i++)
+  {
+    if( i == nack )
+    {
+      returnStatus = receiveByte(0);
+      if(returnStatus == 1){return(6);}
+      if(returnStatus != MR_DATA_NACK){return(returnStatus);}
+    }
+    else
+    {
+      returnStatus = receiveByte(1);
+      if(returnStatus == 1){return(6);}
+      if(returnStatus != MR_DATA_ACK){return(returnStatus);}
+    }
+    data[i] = TWDR;
+    bytesAvailable = i+1;
+    totalBytes = i+1;
+  }
+  returnStatus = stop();
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(7);}
+    return(returnStatus);
+  }
+  return(returnStatus);
+}
 
 uint8_t LumiGeekHelper::write(uint8_t address, uint8_t command) {
   if (LumiGeek.debug()) {
