@@ -9,27 +9,26 @@
 #ifndef LumiGeek_h
 #define LumiGeek_h
 
-#include <Wire.h>
-
 #include <Arduino.h>
 #include <inttypes.h>
+
 #include "LumiGeekDefines.h"
 
 // ---------------------------------------------------------------------------
 // Abstract Class: LumiGeekShield
 // ---------------------------------------------------------------------------
 
-class LumiGeekShield
-{
+class LumiGeekShield {
 	public:
-		LumiGeekShield(uint8_t  i2cOffset);
 		void blackout();
 		void testPattern();
-		int i2cAddress();
-    protected:
-        int _i2cOffset;  // NOTE: tried to use uint8_t but got an ambiguous compiler error.  Weird.
+		uint8_t i2cAddress();
+  protected:
+		LumiGeekShield(uint8_t  i2cOffset);
+    bool assertOffsetValue(uint8_t i2cOffset);
+    bool assertSanityCheck();
+    uint8_t _i2cOffset;  // NOTE: tried to use uint8_t but got an ambiguous compiler error.  Weird.
 };
-
 
 // ---------------------------------------------------------------------------
 // Abstract Class: LumiGeekRGB
@@ -37,17 +36,16 @@ class LumiGeekShield
 // They share commands such as fade, jump, auto-fade, auto-jump.
 // ---------------------------------------------------------------------------
 
-class LumiGeekRGB : public LumiGeekShield
-{
+class LumiGeekRGB : public LumiGeekShield {
 	public:
 		LumiGeekRGB(uint8_t addr) : LumiGeekShield(addr) {
 			_i2cOffset = addr;
 		};
-		void jumpHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b);
-		void fadeHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
-		void autoJumpHeaderBetweenRGBs(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
-		void autoFadeHeaderBetweenRGBs(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
-		void autoFadeHeaderToRandomRGBs(uint8_t header, uint8_t speed);
+		void genericJumpHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b);
+		void genericFadeHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
+		void genericAutoJumpHeaderBetweenRGBs(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
+		void genericAutoFadeHeaderBetweenRGBs(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
+		void genericAutoFadeHeaderToRandomRGBs(uint8_t header, uint8_t speed);
 };
 
 
@@ -56,20 +54,24 @@ class LumiGeekRGB : public LumiGeekShield
 // For the 4X shield... 
 // ---------------------------------------------------------------------------
 
-class LumiGeek4xRGB : public LumiGeekRGB
-{
+class LumiGeek4xRGB : public LumiGeekRGB {
 	public:
 		LumiGeek4xRGB() : LumiGeekRGB(0) {};
 		LumiGeek4xRGB(uint8_t addr) : LumiGeekRGB(addr) {};
+    bool assertHeaderValue(uint8_t header);
+		void jumpHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b);
+		void fadeHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
+		void autoJumpHeaderBetweenRGBs(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
+		void autoFadeHeaderBetweenRGBs(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
+		void autoFadeHeaderToRandomRGBs(uint8_t header, uint8_t speed);
 };
 
 // ---------------------------------------------------------------------------
 // Class: LG1xRGBMega
-// For the 4X shield... 
+// For the 1X shield... 
 // ---------------------------------------------------------------------------
 
-class LumiGeek1xRGBMega : public LumiGeekRGB
-{
+class LumiGeek1xRGBMega : public LumiGeekRGB {
 	public:
 		LumiGeek1xRGBMega() : LumiGeekRGB(0) {};
 		LumiGeek1xRGBMega(uint8_t addr) : LumiGeekRGB(addr) {};
@@ -78,7 +80,22 @@ class LumiGeek1xRGBMega : public LumiGeekRGB
 		void autoJumpBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
 		void autoFadeBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
 		void autoFadeToRandomRGBs(uint8_t speed);
+};
 
+// ---------------------------------------------------------------------------
+// Class: LumiGeek3xCC
+// For the 3x Constant Current shield... 
+// ---------------------------------------------------------------------------
+
+class LumiGeek3xCC : public LumiGeekRGB {
+	public:
+		LumiGeek3xCC() : LumiGeekRGB(0) {};
+		LumiGeek3xCC(uint8_t addr) : LumiGeekRGB(addr) {};
+		void jumpToRGB(uint8_t r, uint8_t g, uint8_t b);
+		void fadeToRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
+		void autoJumpBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
+		void autoFadeBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
+		void autoFadeToRandomRGBs(uint8_t speed);
 };
 
 // ---------------------------------------------------------------------------
@@ -88,8 +105,7 @@ class LumiGeek1xRGBMega : public LumiGeekRGB
 // Since this is a 1X board, the header parameter is ommitted from these helper methods
 // ---------------------------------------------------------------------------
 
-class LumiGeekAddressable : public LumiGeekShield
-{
+class LumiGeekAddressable : public LumiGeekShield {
 	public:
 		LumiGeekAddressable(uint8_t addr) : LumiGeekShield(addr) {};   
 		void setMode(uint8_t mode);
@@ -108,8 +124,7 @@ class LumiGeekAddressable : public LumiGeekShield
 // Since this is a 1X board, the header parameter is ommitted from these helper methods
 // ---------------------------------------------------------------------------
 
-class Addressable1XMultiTool : public LumiGeekAddressable
-{
+class Addressable1XMultiTool : public LumiGeekAddressable {
 	Addressable1XMultiTool(uint8_t addr) : LumiGeekAddressable(addr) {};   
 	Addressable1XMultiTool() : LumiGeekAddressable(0) {};
 	void setMode(uint8_t mode);
@@ -128,8 +143,7 @@ class Addressable1XMultiTool : public LumiGeekAddressable
 // Since this is a 1X board, the header parameter is ommitted from these helper methods
 // ---------------------------------------------------------------------------
 
-class LumiGeek5x7Headlight : public LumiGeekAddressable
-{
+class LumiGeek5x7Headlight : public LumiGeekAddressable {
 	LumiGeek5x7Headlight(uint8_t addr) : LumiGeekAddressable(addr) {};   
 	LumiGeek5x7Headlight() : LumiGeekAddressable(0) {};  
 	void draw2DFrame(uint8_t pixelRGBs[5][7][3]);
@@ -142,8 +156,7 @@ class LumiGeek5x7Headlight : public LumiGeekAddressable
 // Since this is a 1X board, the header parameter is ommitted from these helper methods.
 // ---------------------------------------------------------------------------
 
-class LumiGeek1xDMX : public LumiGeekShield
-{
+class LumiGeek1xDMX : public LumiGeekShield {
 	public:
 		LumiGeek1xDMX() : LumiGeekShield(0) {};
 		LumiGeek1xDMX(uint8_t addr) : LumiGeekShield(addr) {};
@@ -151,27 +164,66 @@ class LumiGeek1xDMX : public LumiGeekShield
 		void setEntireUniverse(uint8_t universe[]);  // does not work with the Wire library... only with modified I2C Rev5 library
 };
 
+
 // ---------------------------------------------------------------------------
 // Class: LumiGeekHelper
-// TO-DO: Revisit this...  do we want to instantiate helpers for the shields? 
 // ---------------------------------------------------------------------------
 
-class LumiGeekHelper 
-{
+class LumiGeekHelper  {
 	private:
-		static bool _verbose;
+		static bool _debug;
+    static bool _initialized;
+		
+		void sendCommandToEveryAddress(uint8_t);
+		
+    uint8_t start();
+    uint8_t stop();
+    void lockUp();
+
+    uint8_t sendAddress(uint8_t);
+    uint8_t sendByte(uint8_t);
+    uint8_t receiveByte(uint8_t);
+
+    uint8_t returnStatus;
+    uint8_t nack;
+    uint8_t data[LG_I2C_BUFFER_LENGTH];
+
+
+    static uint8_t bytesAvailable;
+    static uint16_t bufferIndex;
+    static uint8_t totalBytes;
+    static uint16_t timeOutDelay;
+			
 	public: 
 		LumiGeekHelper() {};
 
 		// how do we track instantitions of the shields? 
+		// for now, we don't have to... but that could be interesting later on.
+		
+		void setDebug(bool b);
+		bool debug();
+    
+		static void setInitialized(bool i);
+		static bool initialized();
 		
 		void begin();
-		void setVerbose(bool b);
+		void begin(uint8_t);
 		
+		void end();
+		void scan();
+	    
+	  void setTimeOut(uint16_t);
+				
 		void testPattern();
 		void blackout();
+		
+		uint8_t write(uint8_t, uint8_t);
+		uint8_t write(uint8_t, uint8_t, uint8_t*, uint16_t);
+	   
+    LumiGeek4xRGB addShield4xRGB(uint8_t dip); 
+    LumiGeek3xCC addShield3xCC(uint8_t dip); 
+     
 };
-
 
 extern LumiGeekHelper LumiGeek;
 

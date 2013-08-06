@@ -9,45 +9,47 @@
 #ifndef LumiGeekDefines_h
 #define LumiGeekDefines_h
 
-// ----------------------------------------------------------------------------------------------------
-// I2C bus default pins
-
-#define LG_I2C_FREQ 100000L
-#define LG_I2C_BUFFER_LENGTH 1020  // will drive RGB for 5m of 68px/m strip
-#define LG_I2C_PIN1 20
-#define LG_I2C_PIN2 21
+// TEMPORARILY USE THIS DEFINE WHILE PORTING I2C...  NUKE EVENTUALLY
+#define USE_LUMIGEEK_I2C 1    
 
 // ----------------------------------------------------------------------------------------------------
-// I2C bus default addresses in Arduino-friendly 7-bit notation
-	
-#define LG_4XRGB 0x50				// 4X RGB Strip Shield		
-#define LG_1XADDR 0x50				// 1X Addressable MultiTool  	
-#define LG_1XDMX 0x50				// 1X DMX Universe Generator	
-#define LG_1XRGBMEGA 0x50			// 1X RGB Mega Strip Shield	
-#define LG_3XCC_1W 0x50				// 3X CC 1W Shield	
-#define LG_24XMONO 0x50				// 24X Mono LED Shield
-#define LG_5X7_HEADLIGHT 0x5F		// 5x7 Headlight	
+// I2C defines
+
+#define LG_I2C_BUFFER_LENGTH 204  // will drive RGB for 1m of 68px/m strip
+#define LG_BASE_I2C_ADDRESS 0x50	
+
+#define START           0x08
+#define REPEATED_START  0x10
+#define MT_SLA_ACK	0x18
+#define MT_SLA_NACK	0x20
+#define MT_DATA_ACK     0x28
+#define MT_DATA_NACK    0x30
+#define MR_SLA_ACK	0x40
+#define MR_SLA_NACK	0x48
+#define MR_DATA_ACK     0x50
+#define MR_DATA_NACK    0x58
+#define LOST_ARBTRTN    0x38
+#define TWI_STATUS      (TWSR & 0xF8)
+#define SLA_W(address)  (address << 1)
+#define SLA_R(address)  ((address << 1) + 0x01)
+#define cbi(sfr, bit)   (_SFR_BYTE(sfr) &= ~_BV(bit))
+#define sbi(sfr, bit)   (_SFR_BYTE(sfr) |= _BV(bit))
 
 
 // ----------------------------------------------------------------------------------------------------
 // LumiGeek Global Commands
-// Any of our shields on the TurBull Encabulator respond to these global I2C commands
+// Any of our shields respond to these commands
 
 #define LG_GLOBAL_CMD_BLACKOUT 0xAA
 #define LG_GLOBAL_CMD_TEST_PATTERN 0xBB 
 
 
 // ----------------------------------------------------------------------------------------------------
-// LumiGeek 4X RGB Strip Commands 
-// There are four headers on each of the two I2C shields on the TurBull Encabulator
-
-// See the comments for the parameters that should be sent immediately after any given command
+// LumiGeek Generic RGB Commands 
+// These commands apply to the 4xRGB, 1xMega RGB, and the 3xCC 
 
 #define LG_RGB_CMD_JUMP_TO 0x21				// 0x21 Header R G B  
-#define LG_RGB_CMD_FADE_TO 0x22				// 0x22 Header R G B Speed
-
-// TODO: Verify these commands with JoeJoe:
- 
+#define LG_RGB_CMD_FADE_TO 0x22				// 0x22 Header R G B Speed 
 #define LG_RGB_CMD_AUTO_FADE 0x23			// 0x23 Header R1 G1 B1 R2 G2 B2 Speed
 #define LG_RGB_CMD_AUTO_JUMP 0x24			// 0x24 Header R1 G1 B1 R2 G2 B2 Speed
 #define LG_RGB_CMD_AUTO_RANDOM 0x25			// 0x25 Header Speed  
@@ -92,14 +94,8 @@
 #define LG_DMX_CMD_SET_BYTES_FROM_ADDR 0x41	// 0x41 Header BaseAddress [R1 G1 B1 ... RN GN BN]
 #define LG_DMX_CMD_SET_ENTIRE_UNIVERSE 0x42	// 0x42 Header [512 bytes of DMX data]
 
-
 // ----------------------------------------------------------------------------------------------------
 // "Light is not so much something that reveals, as it is itself the revelation." – James Turrell
 // ----------------------------------------------------------------------------------------------------
 
 #endif
-
-
-
-
-

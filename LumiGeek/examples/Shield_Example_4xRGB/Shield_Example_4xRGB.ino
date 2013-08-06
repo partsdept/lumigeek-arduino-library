@@ -1,30 +1,26 @@
 #include <LumiGeek.h>
-#include <Wire.h>  // we need to includ Wire.h until we have our own LG I2C implementation
 
-LumiGeek4xRGB lumigeekShield;
+// create a reference to our shield
+LumiGeek4xRGB lg4xRGB;
 
 void setup() {
-  
-  Wire.begin();  // we need this until we have our own LG I2C implementation
- 
-  // create a reference to our shield with its current DIP switch setting 
+  // initialize the LumiGeek library
+  LumiGeek.begin();
+  LumiGeek.setDebug(true);
 
-  lumigeekShield = LumiGeek4xRGB(1);  // check the DIP switches on your shield, default should be 0 
- 
-  // setup some periodic/automated behaviors with just one call
-  
-  lumigeekShield.autoJumpHeaderBetweenRGBs(2,random() % 255,0,0,0,0,random() % 255,5);
-  lumigeekShield.autoFadeHeaderBetweenRGBs(4,0,random() % 255,0,0,0,random() % 255,5);
- 
+  // get a new reference to a shield with dip switches = 0x1
+  lg4xRGB = LumiGeek.addShield4xRGB(1); 
+
+  // blackout any old header settings and wait one second
+  lg4xRGB.blackout();
+  delay(1000);
+
+  // setup periodic/automated behavior with just one line of code
+  lg4xRGB.autoFadeHeaderBetweenRGBs(1,0,0,255,255,0,0,100);
 }
 
 void loop() {
-  
   // call some manual color changes each time through the loop
-  
-  lumigeekShield.jumpHeaderToRGB(1,random() % 255,0,random() % 255); 
-  lumigeekShield.fadeHeaderToRGB(3,0,random() % 255,random() % 255,10); 
+  lg4xRGB.jumpHeaderToRGB(3,random() % 200,0,random() % 200); 
   delay(3000);
- 
 }
-		
