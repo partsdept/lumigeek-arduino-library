@@ -16,7 +16,7 @@ void setup() {
   delay(1000);
 
   // setup periodic/automated behavior with just one line of code
-  lg4xRGB.autoFadeHeaderBetweenRGBs(1,0,0,255,255,0,0,100);
+  lg4xRGB.autoFadeHeaderBetweenRGBs(1,0,0,255,255,0,0,5);
 }
 
 void loop() {
