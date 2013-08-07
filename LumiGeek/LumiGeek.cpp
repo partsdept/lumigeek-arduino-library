@@ -30,36 +30,34 @@ LumiGeekShield::LumiGeekShield(uint8_t i2cOffset,uint8_t productId) {
     if (LumiGeek.debug()) {
       Serial.print("Shield at dip switch setting 0x");
       Serial.print(_i2cOffset,HEX);
-      Serial.print(" is product ID 0x");
-      Serial.print(_productId,HEX);
-      Serial.print(" with firmware v");
-      Serial.println(_firmwareVersion);
+      Serial.print(" has product ID 0x");
+      Serial.println(_productId,HEX);
     }
   } else {
     LumiGeek.setInitialized(false);
     if (LumiGeek.debug()) {
-      Serial.print("ERROR: Shield at dip switch setting 0x");
-      Serial.print(_i2cOffset,HEX);
-      Serial.print(" does not match product ID 0x");
+      Serial.print("ERROR: Shield instantiation has product ID of ");
+      Serial.print(productId,HEX);
+      Serial.print(" but does not match reported product ID 0x");
       Serial.print(_productId,HEX);
-      Serial.print(".  Check your dip switches and your constructor call.");
-      Serial.println(_firmwareVersion,HEX);
+      Serial.print("  from shield at dip switch setting 0x");
+      Serial.println(_i2cOffset,HEX);
+      Serial.println("TIP: Check your dip switches on the shield against the shield class constructor.");
+      Serial.println("TIP: Make sure you are using the right class for the right shield.");
     }
   }
 }
 
 bool LumiGeekShield::assertProductMatchesI2cAddress(uint8_t productId) {
-  uint8_t queryResult[1];
-  queryResult[0] = 0x0;
-  LumiGeek.read(i2cAddress(),LG_GLOBAL_CMD_QUERY,queryResult,1);
-  
-  if (queryResult[0] == productId) {
-    _productId = queryResult[0];
-    _firmwareVersion = queryResult[1];
+  _productId = LumiGeek.read((uint8_t) i2cAddress(),(uint8_t) LG_GLOBAL_CMD_QUERY);
+  if (LumiGeek.debug()) {
+    Serial.print("Product ID is ");
+    Serial.println(_productId,HEX);
+  }
+  if (_productId == productId) {
     return true;
   } else {
-    _productId = 0;
-    _firmwareVersion = 0;
+    LumiGeek.setInitialized(false);
     return false;
   }
 }
@@ -566,6 +564,7 @@ void LumiGeekHelper::scan() {
   uint8_t totalDeviceCount = 0;
   uint16_t tempTime = timeOutDelay;
   setTimeOut(80);
+  // TODO: put the Serial printing in a debug conditional
   Serial.println("Scanning for devices...please wait");
   Serial.println();
   for(uint8_t s = 0; s <= 0x7F; s++) {
@@ -599,7 +598,18 @@ void LumiGeekHelper::scan() {
   timeOutDelay = tempTime;
 }
 
-uint8_t LumiGeekHelper::read(uint8_t address, uint8_t registerAddress, uint8_t *data, uint8_t numberBytes) {
+
+uint8_t LumiGeekHelper::read(uint8_t address, uint8_t registerAddress) {
+  
+  //if (LumiGeek.debug()) {
+    Serial.print("Called single-byte read() ");
+    Serial.print(" with address ");
+    Serial.print(address,HEX);
+    Serial.print(" register ");
+    Serial.println(registerAddress);
+    //}
+  
+  uint8_t numberBytes = 1;  
   bytesAvailable = 0;
   bufferIndex = 0;
   if(numberBytes == 0){numberBytes++;}
@@ -655,6 +665,82 @@ uint8_t LumiGeekHelper::read(uint8_t address, uint8_t registerAddress, uint8_t *
     if(returnStatus == 1){return(7);}
     return(returnStatus);
   }
+  
+  return data[0];
+  
+}
+
+
+
+uint8_t LumiGeekHelper::read(uint8_t address, uint8_t registerAddress, uint8_t* buffer, uint8_t numberBytes) {
+  
+  // TODO: There is something buggy with passing in the read buffer.  Figure this out later.  
+  
+  //if (LumiGeek.debug()) {
+    Serial.print("Called multi-byte read() ");
+    Serial.print(" with address ");
+    Serial.print(address,HEX);
+    Serial.print(" register ");
+    Serial.print(registerAddress);
+    Serial.print(" with number of bytes = ");
+    Serial.println(numberBytes);
+    //}
+    
+  bytesAvailable = 0;
+  bufferIndex = 0;
+  if(numberBytes == 0){numberBytes++;}
+  nack = numberBytes - 1;
+  returnStatus = 0;
+  returnStatus = start();
+  if(returnStatus){return(returnStatus);}
+  returnStatus = sendAddress(SLA_W(address));
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(2);}
+    return(returnStatus);
+  }
+  returnStatus = sendByte(registerAddress);
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(3);}
+    return(returnStatus);
+  }
+  returnStatus = start();
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(4);}
+    return(returnStatus);
+  }
+  returnStatus = sendAddress(SLA_R(address));
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(5);}
+    return(returnStatus);
+  }
+  for(uint8_t i = 0; i < numberBytes; i++)
+  {
+    if( i == nack )
+    {
+      returnStatus = receiveByte(0);
+      if(returnStatus == 1){return(6);}
+      if(returnStatus != MR_DATA_NACK){return(returnStatus);}
+    }
+    else
+    {
+      returnStatus = receiveByte(1);
+      if(returnStatus == 1){return(6);}
+      if(returnStatus != MR_DATA_ACK){return(returnStatus);}
+    }
+    buffer[i] = TWDR;
+    bytesAvailable = i+1;
+    totalBytes = i+1;
+  }
+  returnStatus = stop();
+  if(returnStatus)
+  {
+    if(returnStatus == 1){return(7);}
+    return(returnStatus);
+  }
   return(returnStatus);
 }
 
@@ -687,7 +773,7 @@ uint8_t LumiGeekHelper::write(uint8_t address, uint8_t command) {
 }
 
 
-uint8_t LumiGeekHelper::write(uint8_t address, uint8_t command, uint8_t *data, uint16_t numberBytes) {
+uint8_t LumiGeekHelper::write(uint8_t address, uint8_t command, uint8_t* buffer, uint16_t numberBytes) {
   if (LumiGeek.debug()) {
     Serial.print("I2C writing to address 0x");	
     Serial.print(address,HEX);	
@@ -712,7 +798,7 @@ uint8_t LumiGeekHelper::write(uint8_t address, uint8_t command, uint8_t *data, u
     return(returnStatus);
   }
   for (uint16_t i = 0; i < numberBytes; i++) {
-    returnStatus = sendByte(data[i]);
+    returnStatus = sendByte(buffer[i]);
     if(returnStatus) {
         if(returnStatus == 1){return(3);}
         return(returnStatus);

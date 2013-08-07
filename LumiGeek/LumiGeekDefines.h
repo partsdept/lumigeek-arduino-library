@@ -43,12 +43,12 @@
 #define LG_1XRGBMEGA 0x22			  // 1X RGB Mega Strip Shield	
 #define LG_3XCC_1W 0x23				  // 3X CC 1W Shield	
 #define LG_24XMONO 0x1F				  // 24X Mono LED Shield
+#define LG_1XDMX 0x40				    // 1X DMX Universe Generator	
+#define LG_1XADDR 0x50				  // 1X Addressable MultiTool  	
 
 // TODO: get these product IDs from JoeJoe
 
-#define LG_1XDMX 0x00				    // 1X DMX Universe Generator	
 #define LG_5X7_HEADLIGHT 0x00	  // 5x7 Headlight
-#define LG_1XADDR 0x00				  // 1X Addressable MultiTool  	
 
 // ----------------------------------------------------------------------------------------------------
 // LumiGeek Global Commands

@@ -30,7 +30,6 @@ class LumiGeekShield {
     bool assertProductMatchesI2cAddress(uint8_t productId);
     uint8_t _i2cOffset;  // NOTE: tried to use uint8_t but got an ambiguous compiler error.  Weird.
     uint8_t _productId;
-    uint8_t _firmwareVersion;    
 };
 
 // ---------------------------------------------------------------------------
@@ -140,7 +139,7 @@ class Addressable1XMultiTool : public LumiGeekAddressable {
 };
 
 // ---------------------------------------------------------------------------
-// Class: Addr1XMultiTool
+// Class: LumiGeek5x7Headlight
 // Used to control various types of Addressable LED products.  See defines file. 
 // The I2C address is hardcoded into the abstract superclass constructor call.
 // Since this is a 1X board, the header parameter is ommitted from these helper methods
@@ -189,8 +188,6 @@ class LumiGeekHelper  {
 
     uint8_t returnStatus;
     uint8_t nack;
-    uint8_t data[LG_I2C_BUFFER_LENGTH];
-
 
     static uint8_t bytesAvailable;
     static uint16_t bufferIndex;
@@ -199,7 +196,9 @@ class LumiGeekHelper  {
 			
 	public: 
 		LumiGeekHelper() {};
-
+    
+    uint8_t data[LG_I2C_BUFFER_LENGTH];  
+    
 		// how do we track instantitions of the shields? 
 		// for now, we don't have to... but that could be interesting later on.
 		
@@ -220,8 +219,8 @@ class LumiGeekHelper  {
 		void testPattern();
 		void blackout();
 		
-    uint8_t read(uint8_t, uint8_t, uint8_t);
-    uint8_t read(uint8_t, uint8_t, uint8_t*, uint8_t);
+    uint8_t read(uint8_t, uint8_t);
+    uint8_t read(uint8_t, uint8_t, uint8_t*, uint8_t);  
     
 		uint8_t write(uint8_t, uint8_t);
 		uint8_t write(uint8_t, uint8_t, uint8_t*, uint16_t);
