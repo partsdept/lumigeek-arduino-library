@@ -50,6 +50,7 @@
 
 #define LG_5X7_HEADLIGHT 0x00	  // 5x7 Headlight
 
+
 // ----------------------------------------------------------------------------------------------------
 // LumiGeek Global Commands
 // Any of our shields respond to these commands
@@ -60,13 +61,25 @@
 
 
 // ----------------------------------------------------------------------------------------------------
+// LumiGeek Generic Mono Commands 
+// These commands apply to the 24xMono
+
+#define LG_MONO_CMD_JUMP_TO 0x31			  // 0x31 Header Value  
+#define LG_MONO_CMD_FADE_TO 0x32				// 0x32 Header Value Speed 
+#define LG_MONO_CMD_AUTO_FADE 0x33			// 0x33 Header Value1 Value2 Speed
+#define LG_MONO_CMD_AUTO_JUMP 0x34			// 0x34 Header Value1 Value2 Speed
+#define LG_MONO_CMD_AUTO_RANDOM 0x35		// 0x35 Header Speed  
+#define LG_MONO_CMD_FRAME 0x36		      // 0x36 Value[]  
+
+
+// ----------------------------------------------------------------------------------------------------
 // LumiGeek Generic RGB Commands 
 // These commands apply to the 4xRGB, 1xMega RGB, and the 3xCC 
 
-#define LG_RGB_CMD_JUMP_TO 0x21				// 0x21 Header R G B  
-#define LG_RGB_CMD_FADE_TO 0x22				// 0x22 Header R G B Speed 
-#define LG_RGB_CMD_AUTO_FADE 0x23			// 0x23 Header R1 G1 B1 R2 G2 B2 Speed
-#define LG_RGB_CMD_AUTO_JUMP 0x24			// 0x24 Header R1 G1 B1 R2 G2 B2 Speed
+#define LG_RGB_CMD_JUMP_TO 0x21				  // 0x21 Header R G B  
+#define LG_RGB_CMD_FADE_TO 0x22				  // 0x22 Header R G B Speed 
+#define LG_RGB_CMD_AUTO_FADE 0x23			  // 0x23 Header R1 G1 B1 R2 G2 B2 Speed
+#define LG_RGB_CMD_AUTO_JUMP 0x24			  // 0x24 Header R1 G1 B1 R2 G2 B2 Speed
 #define LG_RGB_CMD_AUTO_RANDOM 0x25			// 0x25 Header Speed  
 
 

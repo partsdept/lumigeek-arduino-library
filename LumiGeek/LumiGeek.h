@@ -27,10 +27,17 @@ class LumiGeekShield {
 		LumiGeekShield(uint8_t  i2cOffset, uint8_t productId);
     bool assertOffsetValue(uint8_t i2cOffset);
     bool assertSanityCheck();
-    bool assertProductMatchesI2cAddress(uint8_t productId);
+    bool assertProductMatchesI2cAddress();
     uint8_t _i2cOffset;  // NOTE: tried to use uint8_t but got an ambiguous compiler error.  Weird.
-    uint8_t _productId;
+    uint8_t _actualProductId;
+    uint8_t _expectedProductId;
+    bool _initialized;
+    bool _sane;
+    
 };
+
+
+
 
 // ---------------------------------------------------------------------------
 // Abstract Class: LumiGeekRGB
@@ -39,7 +46,7 @@ class LumiGeekShield {
 // ---------------------------------------------------------------------------
 
 class LumiGeekRGB : public LumiGeekShield {
-	public:
+  protected:
 		LumiGeekRGB(uint8_t offset,uint8_t product) : LumiGeekShield(offset,product) {
 			_i2cOffset = offset;
 		};
@@ -91,8 +98,8 @@ class LumiGeek1xRGBMega : public LumiGeekRGB {
 
 class LumiGeek3xCC : public LumiGeekRGB {
 	public:
-		LumiGeek3xCC() : LumiGeekRGB(0,LG_1XRGBMEGA) {};
-		LumiGeek3xCC(uint8_t offset) : LumiGeekRGB(offset,LG_1XRGBMEGA) {};
+		LumiGeek3xCC() : LumiGeekRGB(0,LG_3XCC_1W) {};
+		LumiGeek3xCC(uint8_t offset) : LumiGeekRGB(offset,LG_3XCC_1W) {};
 		void jumpToRGB(uint8_t r, uint8_t g, uint8_t b);
 		void fadeToRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
 		void autoJumpBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
@@ -108,15 +115,15 @@ class LumiGeek3xCC : public LumiGeekRGB {
 // ---------------------------------------------------------------------------
 
 class LumiGeekAddressable : public LumiGeekShield {
-	public:
+  protected:
 		LumiGeekAddressable(uint8_t offset,uint8_t product) : LumiGeekShield(offset,product) {};   
 		void setMode(uint8_t mode);
-		void drawGradient(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t length);
-		void drawComet(uint8_t r, uint8_t g, uint8_t b, uint8_t cometLength, uint8_t tailLength, uint8_t speed);
-		void drawFrame(uint8_t pixelCount, uint8_t pixelRGBs[]);
-		void drawBigFrame(uint16_t pixelCount, uint8_t pixelRGBs[]);
-		void shiftBufferOnce(uint8_t direction, uint8_t length);
-		void autoShiftBuffer(uint8_t direction, uint8_t length, uint8_t speed);
+		void genericDrawGradient(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t length);
+		void genericDrawComet(uint8_t header, uint8_t r, uint8_t g, uint8_t b, uint8_t cometLength, uint8_t tailLength, uint8_t speed);
+		void genericDrawFrame(uint8_t header, uint8_t pixelCount, uint8_t pixelRGBs[]);
+		void genericDrawBigFrame(uint8_t header, uint16_t pixelCount, uint8_t pixelRGBs[]);
+		void genericShiftBufferOnce(uint8_t header, uint8_t direction, uint8_t length);
+		void genericAutoShiftBuffer(uint8_t header, uint8_t direction, uint8_t length, uint8_t speed);
 };
 
 // ---------------------------------------------------------------------------
@@ -126,16 +133,16 @@ class LumiGeekAddressable : public LumiGeekShield {
 // Since this is a 1X board, the header parameter is ommitted from these helper methods
 // ---------------------------------------------------------------------------
 
-class Addressable1XMultiTool : public LumiGeekAddressable {
-	Addressable1XMultiTool(uint8_t offset) : LumiGeekAddressable(offset,LG_1XADDR) {};   
-	Addressable1XMultiTool() : LumiGeekAddressable(0,LG_1XADDR) {};
-	void setMode(uint8_t mode);
-	void drawGradient(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t length);
-	void drawComet(uint8_t r, uint8_t g, uint8_t b, uint8_t cometLength, uint8_t tailLength, uint8_t speed);
-	void drawFrame(uint8_t pixelCount, uint8_t pixelRGBs[]);
-	void drawBigFrame(uint16_t pixelCount, uint8_t pixelRGBs[]);
-	void shiftBufferOnce(uint8_t direction, uint8_t length);
-	void autoShiftBuffer(uint8_t direction, uint8_t length, uint8_t speed);	
+class LumiGeek1xAddr : public LumiGeekAddressable {
+  public:
+  	LumiGeek1xAddr(uint8_t offset) : LumiGeekAddressable(offset,LG_1XADDR) {};   
+  	LumiGeek1xAddr() : LumiGeekAddressable(0,LG_1XADDR) {};
+  	void drawGradient(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t length);
+  	void drawComet(uint8_t r, uint8_t g, uint8_t b, uint8_t cometLength, uint8_t tailLength, uint8_t speed);
+  	void drawFrame(uint8_t pixelCount, uint8_t pixelRGBs[]);
+  	void drawBigFrame(uint16_t pixelCount, uint8_t pixelRGBs[]);
+  	void shiftBufferOnce(uint8_t direction, uint8_t length);
+  	void autoShiftBuffer(uint8_t direction, uint8_t length, uint8_t speed);	
 };
 
 // ---------------------------------------------------------------------------
@@ -146,8 +153,9 @@ class Addressable1XMultiTool : public LumiGeekAddressable {
 // ---------------------------------------------------------------------------
 
 class LumiGeek5x7Headlight : public LumiGeekAddressable {
-	LumiGeek5x7Headlight() : LumiGeekAddressable(15,LG_5X7_HEADLIGHT) {};  
-	void draw2DFrame(uint8_t pixelRGBs[5][7][3]);
+  public:
+  	LumiGeek5x7Headlight() : LumiGeekAddressable(15,LG_5X7_HEADLIGHT) {};  
+  	void draw2DFrame(uint8_t pixelRGBs[5][7][3]);
 };
 
 // ---------------------------------------------------------------------------
@@ -174,7 +182,8 @@ class LumiGeek1xDMX : public LumiGeekShield {
 class LumiGeekHelper  {
 	private:
 		static bool _debug;
-    static bool _initialized;
+		static bool _verbose;
+    static bool _calledBegin;
 		
 		void sendCommandToEveryAddress(uint8_t);
 		
@@ -204,9 +213,11 @@ class LumiGeekHelper  {
 		
 		void setDebug(bool b);
 		bool debug();
+
+		void setVerbose(bool b);
+		bool verbose();
     
-		static void setInitialized(bool i);
-		static bool initialized();
+		static bool calledBegin();
 		
 		void begin();
 		void begin(uint8_t);
@@ -224,7 +235,8 @@ class LumiGeekHelper  {
     
 		uint8_t write(uint8_t, uint8_t);
 		uint8_t write(uint8_t, uint8_t, uint8_t*, uint16_t);
-	   
+		uint8_t write(uint8_t, uint8_t, uint8_t, uint8_t*, uint16_t);  // special case for passing in a header byte separate from a big RGB byte array
+	    
     // Explore this way of constructing the shield objects later on after talking to JJ 
     // LumiGeek4xRGB addShield4xRGB(uint8_t dip); 
     // LumiGeek3xCC addShield3xCC(uint8_t dip); 

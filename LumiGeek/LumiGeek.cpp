@@ -17,59 +17,79 @@
 // Calls the superclass constructor with the appropriate I2C address
 // ---------------------------------------------------------------------------
 
-LumiGeekShield::LumiGeekShield(uint8_t i2cOffset,uint8_t productId) {
-  if (assertOffsetValue(i2cOffset)) {
-    _i2cOffset = i2cOffset;    
-  } else {
-    if (LumiGeek.debug()) {
-      Serial.println("Bad dip switch value in shield constructor.  Must be in range 0-15.");
-    }
-    LumiGeek.setInitialized(false);
-  }
-  if (assertProductMatchesI2cAddress(productId)) {
-    if (LumiGeek.debug()) {
-      Serial.print("Shield at dip switch setting 0x");
-      Serial.print(_i2cOffset,HEX);
-      Serial.print(" has product ID 0x");
-      Serial.println(_productId,HEX);
-    }
-  } else {
-    LumiGeek.setInitialized(false);
-    if (LumiGeek.debug()) {
-      Serial.print("ERROR: Shield instantiation has product ID of ");
-      Serial.print(productId,HEX);
-      Serial.print(" but does not match reported product ID 0x");
-      Serial.print(_productId,HEX);
-      Serial.print("  from shield at dip switch setting 0x");
-      Serial.println(_i2cOffset,HEX);
-      Serial.println("TIP: Check your dip switches on the shield against the shield class constructor.");
-      Serial.println("TIP: Make sure you are using the right class for the right shield.");
-    }
-  }
+LumiGeekShield::LumiGeekShield(uint8_t dipSwitchSetting,uint8_t targetProductId) {
+  _initialized = false;
+  _sane = true;
+  _i2cOffset = dipSwitchSetting;    
+  _expectedProductId = targetProductId;
 }
 
-bool LumiGeekShield::assertProductMatchesI2cAddress(uint8_t productId) {
-  _productId = LumiGeek.read((uint8_t) i2cAddress(),(uint8_t) LG_GLOBAL_CMD_QUERY);
-  if (LumiGeek.debug()) {
-    Serial.print("Product ID is ");
-    Serial.println(_productId,HEX);
-  }
-  if (_productId == productId) {
+bool LumiGeekShield::assertProductMatchesI2cAddress() {
+  _actualProductId = LumiGeek.read((uint8_t) i2cAddress(),(uint8_t) LG_GLOBAL_CMD_QUERY);
+  if (_expectedProductId == _actualProductId) {
     return true;
   } else {
-    LumiGeek.setInitialized(false);
     return false;
   }
 }
 
 bool LumiGeekShield::assertSanityCheck() {
-  // do a very simple sanity check right now
-  if (!LumiGeek.initialized()) {
+  // only check productId and dip switch range once
+  if (!_initialized) {
+    _initialized = true;
+    if (assertProductMatchesI2cAddress()) {
+      if (LumiGeek.debug()) {
+        Serial.print("LUMIGEEK: Shield at dip switch setting 0x");
+        Serial.print(_i2cOffset,HEX);
+        Serial.print(" has product ID 0x");
+        Serial.println(_actualProductId,HEX);
+      }
+    } else {
+      _sane = false;
+      if (LumiGeek.debug()) {
+        Serial.print("ERROR: Failed sanity check. Shield instantiation has product ID of 0x");
+        Serial.print(_expectedProductId,HEX);
+        Serial.print(" but does not match reported product ID 0x");
+        Serial.print(_actualProductId,HEX);
+        Serial.print("  from shield at dip switch setting 0x");
+        Serial.println(_i2cOffset,HEX);
+        Serial.println("TIP: Make sure you are instantiating the right LumiGeek library class for the right physical shield.");
+        Serial.println("TIP: Check your dip switches on the shield against the shield class constructor.");
+        Serial.println("TIP: Dip switches are in binary:  0x0 = |.|.|.|.|");
+        Serial.println("                                  0x1 = |.|.|.|'|");
+        Serial.println("                                  0x2 = |.|.|'|.|");
+        Serial.println("                                  0x3 = |.|.|'|'|");
+        Serial.println("                                  0x4 = |.|'|.|.|");
+        Serial.println("                                  0x5 = |.|'|.|'|");
+        Serial.println("                                  0x6 = |.|'|'|.|");
+        Serial.println("                                  0x7 = |.|'|'|'|");
+        Serial.println("                                  0x8 = |'|.|.|.|");  
+        Serial.println("                                  0x9 = |'|.|.|'|");
+        Serial.println("                                  0xA = |'|.|'|.|");
+        Serial.println("                                  0xC = |'|.|'|'|");
+        Serial.println("                                  0xC = |'|'|.|.|");
+        Serial.println("                                  0xD = |'|'|.|'|");
+        Serial.println("                                  0xE = |'|'|'|.|");
+        Serial.println("                                  0xF = |'|'|'|'|");
+      }
+      return false;
+    }
+    if (!assertOffsetValue(_i2cOffset)) {
+      if (LumiGeek.debug()) {
+        Serial.println("ERROR: Bad dip switch value in shield constructor.  Must be in range 0-15.");
+      }
+      _sane = false;
+      return false;
+    }
+  }
+
+  if (!LumiGeek.calledBegin()) {
     if (LumiGeek.debug()) {
-      Serial.println("ERROR: Failed sanity check. Make sure you called LumiGeek.begin() and set your dip switches properly to match your shield constructors.");
+      Serial.println("ERROR: Failed sanity check. Make sure you called LumiGeek.begin() before calling shield functions.");
     }
     return false;
   }
+  
   return true;
 }
 
@@ -78,6 +98,7 @@ bool LumiGeekShield::assertOffsetValue(uint8_t i2cOffset) {
     if (LumiGeek.debug()) {
       Serial.println("LumiGeek I2C dip switch setting must be from 0 to 15.");
     }
+    _sane = false;
     return false;
   } 
   return true;
@@ -88,12 +109,18 @@ uint8_t LumiGeekShield::i2cAddress() {
 }
 
 void LumiGeekShield::blackout() {
-	LumiGeek.write(i2cAddress(),LG_GLOBAL_CMD_BLACKOUT);
+  if (assertSanityCheck()) {
+	  LumiGeek.write(i2cAddress(),LG_GLOBAL_CMD_BLACKOUT);
+  }
 }
 
 void LumiGeekShield::testPattern() {
-	LumiGeek.write(i2cAddress(),LG_GLOBAL_CMD_TEST_PATTERN);
+  if (assertSanityCheck()) {
+	  LumiGeek.write(i2cAddress(),LG_GLOBAL_CMD_TEST_PATTERN);
+  }
 }
+
+
 
 // ---------------------------------------------------------------------------
 // Methods for LumiGeekRGB
@@ -161,10 +188,10 @@ void LumiGeekRGB::genericAutoFadeHeaderToRandomRGBs(uint8_t header, uint8_t spee
   }
 }
 
+
 // ---------------------------------------------------------------------------
 // Methods for 4xRGB... same RGB macros, but assert header is [1..4]
 // ---------------------------------------------------------------------------
-
 
 bool LumiGeek4xRGB::assertHeaderValue(uint8_t header) {
   if (header == 0) {
@@ -267,155 +294,112 @@ void LumiGeek3xCC::autoFadeToRandomRGBs(uint8_t speed) {
 }
 
 // ---------------------------------------------------------------------------
-// Methods for Addr1XMultiTool
+// Methods for LumiGeekAddressable
 // ---------------------------------------------------------------------------
 
-void Addressable1XMultiTool::setMode(uint8_t mode) {
+void LumiGeekAddressable::setMode(uint8_t mode) {
 	// ASSERT: more >= 1 && mode <= 3
 	// TODO: document that mode = 1 is WS2811, mode = 2 is WS2801, mode = 3 is ???
-#if  USE_LUMIGEEK_I2C
-	uint8_t params[2];
-	params[0] = 1; // hardcode the header number... this is only a 1X addressable shield
-	params[1] = mode;
-	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_SET_STRIP_MODE,params,2);
-#else	
-	Wire.beginTransmission(i2cAddress());	
-	Wire.write(LG_ADDR_CMD_SET_STRIP_MODE);
-	Wire.write(1);  // hardcode the header number... this is only a 1X addressable shield
-	Wire.write(mode);	
-	Wire.endTransmission();
-#endif
-    delay(5);
+  if (assertSanityCheck()) {
+  	uint8_t params[2];
+  	params[0] = 1; // placehold the header number... it is needed per the macro, but all headers go to the same mode
+  	params[1] = mode;
+  	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_SET_STRIP_MODE,params,2);
+  }
 }
 
-void Addressable1XMultiTool::drawGradient(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t length) {
-#if  USE_LUMIGEEK_I2C
-	uint8_t params[8];
-	params[0] = 1; // hardcode the header number... this is only a 1X addressable shield
-	params[1] = r1;
-	params[2] = g1;
-	params[3] = b1;
-	params[4] = r1;
-	params[5] = g2;
-	params[6] = b2;
-	params[7] = length;
-	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_GRADIENT,params,8);
-#else	
-	Wire.beginTransmission(i2cAddress());	
-	Wire.write(LG_ADDR_CMD_GRADIENT);
-	Wire.write(1);  // hardcode the header number... this is only a 1X addressable shield
-	Wire.write(r1);	
-	Wire.write(g1);	
-	Wire.write(b1);	
-	Wire.write(r2);	
-	Wire.write(g2);	
-	Wire.write(b2);	
-	Wire.write(length);	
-	Wire.endTransmission();
-#endif
-    delay(5);
+void LumiGeekAddressable::genericDrawGradient(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t length) {
+  if (assertSanityCheck()) {
+  	uint8_t params[8];
+  	params[0] = header;
+  	params[1] = r1;
+  	params[2] = g1;
+  	params[3] = b1;
+  	params[4] = r1;
+  	params[5] = g2;
+  	params[6] = b2;
+  	params[7] = length;
+  	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_GRADIENT,params,8);
+  }
 }
 
-void Addressable1XMultiTool::drawComet(uint8_t r, uint8_t g, uint8_t b, uint8_t cometLength, uint8_t tailLength, uint8_t speed) {
-#if  USE_LUMIGEEK_I2C
-	uint8_t params[7];
-	params[0] = 1; // hardcode the header number... this is only a 1X addressable shield
-	params[1] = r;
-	params[2] = g;
-	params[3] = b;
-	params[4] = cometLength;
-	params[5] = tailLength;
-	params[6] = speed;
-	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_COMET_CHASE,params,7);
-#else	
-	Wire.beginTransmission(i2cAddress());	
-	Wire.write(LG_ADDR_CMD_COMET_CHASE);
-	Wire.write(1);  // hardcode the header number... this is only a 1X addressable shield
-	Wire.write(r);	
-	Wire.write(g);	
-	Wire.write(b);	
-	Wire.write(cometLength);	
-	Wire.write(tailLength);	
-	Wire.write(speed);	
-	Wire.endTransmission();
-#endif
-    delay(5);
+void LumiGeekAddressable::genericDrawComet(uint8_t header, uint8_t r, uint8_t g, uint8_t b, uint8_t cometLength, uint8_t tailLength, uint8_t speed) {
+  if (assertSanityCheck()) {
+  	uint8_t params[7];
+  	params[0] = header; // hardcode the header number... this is only a 1X addressable shield
+  	params[1] = r;
+  	params[2] = g;
+  	params[3] = b;
+  	params[4] = cometLength;
+  	params[5] = tailLength;
+  	params[6] = speed;
+  	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_COMET_CHASE,params,7);
+  }
 }
 
-void Addressable1XMultiTool::shiftBufferOnce(uint8_t direction, uint8_t length) {
-#if  USE_LUMIGEEK_I2C
-	uint8_t params[3];
-	params[0] = 1; // hardcode the header number... this is only a 1X addressable shield
-	params[1] = direction;
-	params[2] = length;
-	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_SHIFT_BUFFER_ONCE,params,3);
-#else	
-	Wire.beginTransmission(i2cAddress());	
-	Wire.write(LG_ADDR_CMD_SHIFT_BUFFER_ONCE);
-	Wire.write(1);  // hardcode the header number... this is only a 1X addressable shield
-	Wire.write(direction);	
-	Wire.write(length);
-	Wire.endTransmission();
-#endif
-    delay(5);
+void LumiGeekAddressable::genericShiftBufferOnce(uint8_t header, uint8_t direction, uint8_t length) {
+  if (assertSanityCheck()) {
+  	uint8_t params[3];
+  	params[0] = header; // hardcode the header number... this is only a 1X addressable shield
+  	params[1] = direction;
+  	params[2] = length;
+  	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_SHIFT_BUFFER_ONCE,params,3);
+  }
 }
 
-void Addressable1XMultiTool::autoShiftBuffer(uint8_t direction, uint8_t speed, uint8_t length) {	
-#if  USE_LUMIGEEK_I2C
-	uint8_t params[4];
-	params[0] = 1; // hardcode the header number... this is only a 1X addressable shield
-	params[1] = direction;
-	params[2] = speed;
-	params[3] = length;
-	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_AUTOSHIFT_BUFFER,params,4); 
-#else	
-	Wire.beginTransmission(i2cAddress());	
-	Wire.write(LG_ADDR_CMD_AUTOSHIFT_BUFFER);
-	Wire.write(1);  // hardcode the header number... this is only a 1X addressable shield
-	Wire.write(direction);	
-	Wire.write(speed);	     // JOEJOE: Remember to swap the length and speed in the headlight and 1X as well.
-	Wire.write(length);		
-	Wire.endTransmission();
-#endif
-    delay(5);
+void LumiGeekAddressable::genericAutoShiftBuffer(uint8_t header, uint8_t direction, uint8_t speed, uint8_t length) {	
+  if (assertSanityCheck()) {
+  	uint8_t params[4];
+  	params[0] = header; // hardcode the header number... this is only a 1X addressable shield
+  	params[1] = direction;
+  	params[2] = speed;
+  	params[3] = length;
+  	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_AUTOSHIFT_BUFFER,params,4); 
+  }
 }
 
-
-
-void Addressable1XMultiTool::drawFrame(uint8_t pixelCount, uint8_t pixelRGBs[]) {
-
-    // KNOWN ISSUE: There is an out-of-the-box 32-byte limit on the buffer in the I2C Rev5 library. 
-	// This can easily be overridden up to a maximum 256 bytes (85 pixels) by editing the MAX_BUFFER_SIZE.
-	// Note that this cannot be set above the 256 byte limit without some heavier lifting to accomodate a
-	// length larger than uint8_t will allow for.
-	
-	// SOLUTION:  Modify the I2C library
-	// You need to change the data types in a few places to uint16_t in the I2C Rev5 library.
-	// In particular, you need to change the bufferIndex, numberBytes, and the for loop iterator
-	// in the write() method that takes an array. This is a much easier workaround than modifying Wire.
-	// You can then set the MAX_BUFFER_SIZE higher than 256 but watch your SRAM limits (2k on Uno).
-
-#if  USE_LUMIGEEK_I2C
-	LumiGeek.write(i2cAddress(),LG_ADDR_CMD_FRAME,--pixelRGBs,pixelCount * 3);  // HACK: I fake the header number param with the '--' on the pointer    
-#else
-    Wire.beginTransmission(i2cAddress());    
-	Wire.write(LG_ADDR_CMD_FRAME);
-    Wire.write(1); // hardcode the header number... this is only a 1X addressable shield
-    for (int i = 0 ; i < pixelCount  ; i++) {  // TODO: Verify the BRG vs. RGB with JJ
-	    Wire.write(pixelRGBs[i * 3 + 0]);  // write blue
-	    Wire.write(pixelRGBs[i * 3 + 1]);  // write red
-	    Wire.write(pixelRGBs[i * 3 + 2]);  // write green
-    } 
-    Wire.endTransmission();
-#endif
-    delay(5);
+void LumiGeekAddressable::genericDrawFrame(uint8_t header, uint8_t pixelCount, uint8_t pixelRGBs[]) {
+  if (assertSanityCheck()) {
+    LumiGeek.write(i2cAddress(),LG_ADDR_CMD_FRAME,header,pixelRGBs,pixelCount * 3); 
+  }
 }
 
+// ---------------------------------------------------------------------------
+// Methods for LumiGeek1xAddr
+// ---------------------------------------------------------------------------
 
+void LumiGeek1xAddr::drawGradient(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t length) {
+  genericDrawGradient(1,r1,g1,b1,r2,g2,b2,length);
+  delay(5);
+}
 
+void LumiGeek1xAddr::drawComet(uint8_t r, uint8_t g, uint8_t b, uint8_t cometLength, uint8_t tailLength, uint8_t speed) {
+  genericDrawComet(1,r,g,b,cometLength,tailLength,speed);
+  delay(5);
+}
+
+void LumiGeek1xAddr::drawFrame(uint8_t pixelCount, uint8_t pixelDataRGB[]) {
+  genericDrawFrame(1,pixelCount,pixelDataRGB);
+  delay(5);
+}
+
+void LumiGeek1xAddr::shiftBufferOnce(uint8_t direction, uint8_t length) {
+  genericShiftBufferOnce(1,direction,length);
+  delay(5);
+}
+
+void LumiGeek1xAddr::autoShiftBuffer(uint8_t direction, uint8_t speed, uint8_t length) {	
+  genericAutoShiftBuffer(1,direction,speed,length);
+  delay(5);
+}
+
+// ---------------------------------------------------------------------------
+// Methods for LumiGeek5x7Headlight
+// ---------------------------------------------------------------------------
 
 void LumiGeek5x7Headlight::draw2DFrame(uint8_t pixelRGBs[5][7][3]) {
-   // draw 2D frame   maybe even 
+  // TODO: remap and draw 2D frame
+  delay(5);
 }
 
 // ---------------------------------------------------------------------------
@@ -464,7 +448,8 @@ void LumiGeek1xDMX::setEntireUniverse(uint8_t universe[]) {
 // Debugging Helpers
 
 bool LumiGeekHelper::_debug = false;
-bool LumiGeekHelper::_initialized = false;
+bool LumiGeekHelper::_verbose = false;
+bool LumiGeekHelper::_calledBegin = false;
 
 bool LumiGeekHelper::debug() {
 	return _debug;
@@ -474,29 +459,38 @@ void LumiGeekHelper::setDebug(bool b) {
 	if (b) {
 		_debug = true;
 		Serial.begin(9600);
-		Serial.println("LumiGeek verbose debugging enabled.");
+		Serial.println("LUMIGEEK: Welcome to the LumiGeek library for Arduino v0.1.");
 	} else {
 		_debug = false;
 		// close serial port?
 	}
 }
 
-bool LumiGeekHelper::initialized() {
-	return _initialized;
+bool LumiGeekHelper::verbose() {
+	return _verbose;
 }
 
-void LumiGeekHelper::setInitialized(bool i) {
-		_initialized = i;
+void LumiGeekHelper::setVerbose(bool b) {
+	if (b) {
+		_verbose = true;
+		Serial.println("LUMIGEEK: Verbose debugging enabled.");
+	} else {
+		_verbose = false;
+	}
+}
+
+bool LumiGeekHelper::calledBegin() {
+	return _calledBegin;
 }
 
 // Global macro helpers
 
 void LumiGeekHelper::testPattern() {
-	sendCommandToEveryAddress(LG_GLOBAL_CMD_TEST_PATTERN);
+  sendCommandToEveryAddress(LG_GLOBAL_CMD_TEST_PATTERN);
 }
 
 void LumiGeekHelper::blackout() {
-	sendCommandToEveryAddress(LG_GLOBAL_CMD_BLACKOUT);
+  sendCommandToEveryAddress(LG_GLOBAL_CMD_BLACKOUT);
 }
 
 void LumiGeekHelper::sendCommandToEveryAddress(uint8_t _cmd) {
@@ -512,20 +506,15 @@ void LumiGeekHelper::sendCommandToEveryAddress(uint8_t _cmd) {
 uint8_t LumiGeekHelper::bytesAvailable = 0;
 uint16_t LumiGeekHelper::bufferIndex = 0;
 uint8_t LumiGeekHelper::totalBytes = 0;
-uint16_t LumiGeekHelper::timeOutDelay = 0;
+uint16_t LumiGeekHelper::timeOutDelay = 10;
 
 void LumiGeekHelper::begin() {
 	begin(0); // do not use fast I2C
 }
 
 void LumiGeekHelper::begin(uint8_t _fast) {
-  _initialized = true;
+  _calledBegin = true;
   
-#ifdef  USE_WIRE_I2C
-  Serial.println("Initializing Wire");
-  Wire.begin();
-#else
-	Serial.println("Initializing LumiGeek I2C library");
 #if defined(__AVR_ATmega168__) || defined(__AVR_ATmega8__) || defined(__AVR_ATmega328P__)
   // activate internal pull-ups for twi
   // as per note from atmega8 manual pg167
@@ -540,10 +529,13 @@ void LumiGeekHelper::begin(uint8_t _fast) {
   // initialize twi prescaler and bit rate
   cbi(TWSR, TWPS0);
   cbi(TWSR, TWPS1);
-  TWBR = ((F_CPU / 100000) - 16) / 2;
+  if(!_fast) {
+    TWBR = ((F_CPU / 100000) - 16) / 2;
+  } else {
+    TWBR = ((F_CPU / 400000) - 16) / 2;
+  }
   // enable twi module and acks
   TWCR = _BV(TWEN) | _BV(TWEA);
-#endif
 }
 
 void LumiGeekHelper::end() {
@@ -565,9 +557,10 @@ void LumiGeekHelper::scan() {
   uint16_t tempTime = timeOutDelay;
   setTimeOut(80);
   // TODO: put the Serial printing in a debug conditional
-  Serial.println("Scanning for devices...please wait");
-  Serial.println();
+  Serial.println("LUMIGEEK: Scanning for devices...");
+  Serial.print("  ");
   for(uint8_t s = 0; s <= 0x7F; s++) {
+    Serial.print(".");
     returnStatus = 0;
     returnStatus = start();
     if(!returnStatus)
@@ -578,13 +571,14 @@ void LumiGeekHelper::scan() {
     {
       if(returnStatus == 1)
       {
-        Serial.println("There is a problem with the bus, could not complete scan");
+        Serial.println();    
+        Serial.println("  There is a problem with the bus, could not complete scan");
         timeOutDelay = tempTime;
         return;
       }
-    } else {      
-      Serial.print("Found device at address - ");
-      Serial.print(" 0x");
+    } else {  
+      Serial.println();    
+      Serial.print("  Found device at address 0x");
       Serial.println(s,HEX);
 
       // modify this to return info about the LumiGeek shields on the bus
@@ -594,159 +588,33 @@ void LumiGeekHelper::scan() {
     }
     stop();
   }
-  if(!totalDeviceCount){Serial.println("No devices found");}
+  if(!totalDeviceCount){
+    Serial.println();
+    Serial.println("  No devices found");
+  } else {
+    Serial.println();
+    Serial.print("  I2C device count is ");    
+    Serial.println(totalDeviceCount);    
+  }
   timeOutDelay = tempTime;
 }
 
 
 uint8_t LumiGeekHelper::read(uint8_t address, uint8_t registerAddress) {
-  
-  //if (LumiGeek.debug()) {
-    Serial.print("Called single-byte read() ");
-    Serial.print(" with address ");
-    Serial.print(address,HEX);
-    Serial.print(" register ");
-    Serial.println(registerAddress);
-    //}
-  
-  uint8_t numberBytes = 1;  
-  bytesAvailable = 0;
-  bufferIndex = 0;
-  if(numberBytes == 0){numberBytes++;}
-  nack = numberBytes - 1;
-  returnStatus = 0;
-  returnStatus = start();
-  if(returnStatus){return(returnStatus);}
-  returnStatus = sendAddress(SLA_W(address));
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(2);}
-    return(returnStatus);
-  }
-  returnStatus = sendByte(registerAddress);
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(3);}
-    return(returnStatus);
-  }
-  returnStatus = start();
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(4);}
-    return(returnStatus);
-  }
-  returnStatus = sendAddress(SLA_R(address));
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(5);}
-    return(returnStatus);
-  }
-  for(uint8_t i = 0; i < numberBytes; i++)
-  {
-    if( i == nack )
-    {
-      returnStatus = receiveByte(0);
-      if(returnStatus == 1){return(6);}
-      if(returnStatus != MR_DATA_NACK){return(returnStatus);}
-    }
-    else
-    {
-      returnStatus = receiveByte(1);
-      if(returnStatus == 1){return(6);}
-      if(returnStatus != MR_DATA_ACK){return(returnStatus);}
-    }
-    data[i] = TWDR;
-    bytesAvailable = i+1;
-    totalBytes = i+1;
-  }
-  returnStatus = stop();
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(7);}
-    return(returnStatus);
-  }
-  
-  return data[0];
-  
+  start();  
+  sendAddress(SLA_W(address));
+  sendByte(registerAddress);
+  start();
+  sendAddress(SLA_R(address));
+  receiveByte(0);
+  stop();
+  return TWDR;
 }
 
-
-
-uint8_t LumiGeekHelper::read(uint8_t address, uint8_t registerAddress, uint8_t* buffer, uint8_t numberBytes) {
-  
-  // TODO: There is something buggy with passing in the read buffer.  Figure this out later.  
-  
-  //if (LumiGeek.debug()) {
-    Serial.print("Called multi-byte read() ");
-    Serial.print(" with address ");
-    Serial.print(address,HEX);
-    Serial.print(" register ");
-    Serial.print(registerAddress);
-    Serial.print(" with number of bytes = ");
-    Serial.println(numberBytes);
-    //}
-    
-  bytesAvailable = 0;
-  bufferIndex = 0;
-  if(numberBytes == 0){numberBytes++;}
-  nack = numberBytes - 1;
-  returnStatus = 0;
-  returnStatus = start();
-  if(returnStatus){return(returnStatus);}
-  returnStatus = sendAddress(SLA_W(address));
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(2);}
-    return(returnStatus);
-  }
-  returnStatus = sendByte(registerAddress);
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(3);}
-    return(returnStatus);
-  }
-  returnStatus = start();
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(4);}
-    return(returnStatus);
-  }
-  returnStatus = sendAddress(SLA_R(address));
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(5);}
-    return(returnStatus);
-  }
-  for(uint8_t i = 0; i < numberBytes; i++)
-  {
-    if( i == nack )
-    {
-      returnStatus = receiveByte(0);
-      if(returnStatus == 1){return(6);}
-      if(returnStatus != MR_DATA_NACK){return(returnStatus);}
-    }
-    else
-    {
-      returnStatus = receiveByte(1);
-      if(returnStatus == 1){return(6);}
-      if(returnStatus != MR_DATA_ACK){return(returnStatus);}
-    }
-    buffer[i] = TWDR;
-    bytesAvailable = i+1;
-    totalBytes = i+1;
-  }
-  returnStatus = stop();
-  if(returnStatus)
-  {
-    if(returnStatus == 1){return(7);}
-    return(returnStatus);
-  }
-  return(returnStatus);
-}
 
 uint8_t LumiGeekHelper::write(uint8_t address, uint8_t command) {
-  if (LumiGeek.debug()) {
-    Serial.print("I2C writing to address 0x");	
+  if (LumiGeek.debug() && LumiGeek.verbose()) {
+    Serial.print("LUMIGEEK: I2C writing to address 0x");	
     Serial.print(address,HEX);	
     Serial.print(" with command 0x");
     Serial.println(command,HEX);
@@ -773,9 +641,56 @@ uint8_t LumiGeekHelper::write(uint8_t address, uint8_t command) {
 }
 
 
+uint8_t LumiGeekHelper::write(uint8_t address, uint8_t command, uint8_t header, uint8_t* buffer, uint16_t numberBytes) {
+  if (LumiGeek.debug() && LumiGeek.verbose()) {
+    Serial.print("LUMIGEEK: I2C writing to address 0x");	
+    Serial.print(address,HEX);	
+    Serial.print(" with command 0x");
+    Serial.print(command,HEX);
+    Serial.print(" and header ");
+    Serial.print(header);
+    Serial.print(" and ");
+    Serial.print(numberBytes);
+    Serial.println(" bytes of data.");    
+  }	
+  
+  returnStatus = 0;
+  returnStatus = start();
+  if(returnStatus){return(returnStatus);}
+  returnStatus = sendAddress(SLA_W(address));
+  if(returnStatus) {
+    if(returnStatus == 1){return(2);}
+    return(returnStatus);
+  }
+  returnStatus = sendByte(command);
+  if(returnStatus) {
+    if(returnStatus == 1){return(3);}
+    return(returnStatus);
+  }
+  returnStatus = sendByte(header);
+  if(returnStatus) {
+    if(returnStatus == 1){return(3);}
+    return(returnStatus);
+  }  
+  for (uint16_t i = 0; i < numberBytes; i++) {
+    returnStatus = sendByte(buffer[i]);
+    if(returnStatus) {
+        if(returnStatus == 1){return(3);}
+        return(returnStatus);
+      }
+  }
+  returnStatus = stop();
+  if(returnStatus) {
+    if(returnStatus == 1){return(7);}
+    return(returnStatus);
+  }
+  return(returnStatus);
+}
+
+
 uint8_t LumiGeekHelper::write(uint8_t address, uint8_t command, uint8_t* buffer, uint16_t numberBytes) {
-  if (LumiGeek.debug()) {
-    Serial.print("I2C writing to address 0x");	
+  if (LumiGeek.debug() && LumiGeek.verbose()) {
+    Serial.print("LUMIGEEK: I2C writing to address 0x");	
     Serial.print(address,HEX);	
     Serial.print(" with command 0x");
     Serial.print(command,HEX);
