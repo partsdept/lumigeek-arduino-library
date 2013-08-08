@@ -34,7 +34,7 @@ void LumiGeek1xAddressable::drawGradient(uint8_t r1, uint8_t g1, uint8_t b1, uin
   	params[1] = r1;
   	params[2] = g1;
   	params[3] = b1;
-  	params[4] = r1;
+  	params[4] = r2;
   	params[5] = g2;
   	params[6] = b2;
   	params[7] = length;
