@@ -3,30 +3,17 @@
 // support, and with no warranty, express or implied, as to its usefulness for
 // any purpose.
 //
-// Authors: John Parts Taylor and JoeJoe Martin, March 12, 2013
+// Authors: John Parts Taylor and JoeJoe Martin, August 7, 2013
 // ---------------------------------------------------------------------------
 
-#ifndef LumiGeek_h
-#define LumiGeek_h
-
-#include <Arduino.h>
-#include <inttypes.h>
-
-#include "LumiGeekDefines.h"
-
-#include "LumiGeek4xRGB.h"
-#include "LumiGeek24xMono.h"
-
+#include "LumiGeek5x7Headlight.h"
 
 // ---------------------------------------------------------------------------
-// Abstract Class: LumiGeekShield
+// Methods for LumiGeek5x7Headlight
 // ---------------------------------------------------------------------------
 
-class LumiGeekHelper {
-	public:
-		void begin();
-};
+void LumiGeek5x7Headlight::draw2DFrame(uint8_t pixelRGBs[5][7][3]) {
+  // TODO: remap and draw 2D frame
+  delay(5);
+}
 
-extern LumiGeekHelper LumiGeek;
-
-#endif

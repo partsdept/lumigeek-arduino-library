@@ -42,7 +42,7 @@
 #define LG_4XRGB 0x20				    // 4X RGB Strip Shield		
 #define LG_1XRGBMEGA 0x22			  // 1X RGB Mega Strip Shield	
 #define LG_3XCC_1W 0x23				  // 3X CC 1W Shield	
-#define LG_24XMONO 0x1F				  // 24X Mono LED Shield
+#define LG_24XMONO 0x5E				  // 24X Mono LED Shield
 #define LG_1XDMX 0x40				    // 1X DMX Universe Generator	
 #define LG_1XADDR 0x50				  // 1X Addressable MultiTool  	
 
