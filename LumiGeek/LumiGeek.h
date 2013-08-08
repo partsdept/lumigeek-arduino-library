@@ -16,6 +16,11 @@
 
 #include "LumiGeek4xRGB.h"
 #include "LumiGeek24xMono.h"
+#include "LumiGeek1xRGBMega.h"
+#include "LumiGeek1xAddressable.h"
+#include "LumiGeek3xCC.h"
+#include "LumiGeek1xDMX.h"
+#include "LumiGeek5x7Headlight.h"
 
 
 // ---------------------------------------------------------------------------
