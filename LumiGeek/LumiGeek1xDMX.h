@@ -25,9 +25,9 @@ class LumiGeek1xDMX : public LumiGeekShield {
 	public:
 		LumiGeek1xDMX() : LumiGeekShield(0,LG_1XDMX) {};
 		LumiGeek1xDMX(uint8_t offset) : LumiGeekShield(offset,LG_1XDMX) {};
-		void setAddressWithRGB(uint8_t address, uint8_t r, uint8_t g, uint8_t b);
-		void setAddressWithRGBW(uint8_t address, uint8_t r, uint8_t g, uint8_t b, uint8_t w);
-    void setAddressWithBytes(uint8_t address, uint8_t bytes[], uint16_t length);
+		void setAddressWithRGB(uint16_t address, uint8_t r, uint8_t g, uint8_t b);
+		void setAddressWithRGBW(uint16_t address, uint8_t r, uint8_t g, uint8_t b, uint8_t w);
+    void setAddressWithBytes(uint16_t address, uint8_t bytes[], uint16_t length);
 		void setEntireUniverse(uint8_t universe[]);  // does not work with the Wire library... only with modified I2C Rev5 library
 };
 
