@@ -42,9 +42,9 @@
 #define LG_4XRGB 0x20				    // 4X RGB Strip Shield		
 #define LG_1XRGBMEGA 0x22			  // 1X RGB Mega Strip Shield	
 #define LG_3XCC_1W 0x23				  // 3X CC 1W Shield	
-#define LG_24XMONO 0x5E				  // 24X Mono LED Shield
+#define LG_24XMONO 0x30				  // 24X Mono LED Shield
 #define LG_1XDMX 0x40				    // 1X DMX Universe Generator	
-#define LG_1XADDR 0x50				  // 1X Addressable MultiTool  	
+#define LG_1XADDR 0x50				  // 1X Addressable MultiTool
 
 // TODO: get these product IDs from JoeJoe
 
@@ -65,11 +65,8 @@
 // These commands apply to the 24xMono
 
 #define LG_MONO_CMD_JUMP_TO 0x31			  // 0x31 Header Value  
-#define LG_MONO_CMD_FADE_TO 0x32				// 0x32 Header Value Speed 
-#define LG_MONO_CMD_AUTO_FADE 0x33			// 0x33 Header Value1 Value2 Speed
-#define LG_MONO_CMD_AUTO_JUMP 0x34			// 0x34 Header Value1 Value2 Speed
-#define LG_MONO_CMD_AUTO_RANDOM 0x35		// 0x35 Header Speed  
-#define LG_MONO_CMD_FRAME 0x36		      // 0x36 Value[]  
+// #define LG_MONO_CMD_FADE_TO 0x32				// 0x32 Header Value Speed 
+#define LG_MONO_CMD_FRAME 0x33		      // 0x33 Value[]  
 
 
 // ----------------------------------------------------------------------------------------------------
