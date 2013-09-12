@@ -287,6 +287,58 @@ uint8_t LumiGeekShield::write(uint8_t address, uint8_t command) {
   return(returnStatus);
 }
 
+uint8_t LumiGeekShield::write(uint8_t address, uint8_t command, uint8_t hi_addr, uint8_t lo_addr, uint8_t* buffer, uint16_t numberBytes) {
+  if (debug() && verbose()) {
+    Serial.print("LUMIGEEK: I2C writing to address 0x");	
+    Serial.print(address,HEX);	
+    Serial.print(" with command 0x");
+    Serial.print(command,HEX);
+    Serial.print(" and hi_addr ");
+    Serial.print(hi_addr);
+    Serial.print(" and lo_addr ");
+    Serial.print(lo_addr);
+    Serial.print(" and ");
+    Serial.print(numberBytes);
+    Serial.println(" bytes of data.");    
+  }	
+  
+  returnStatus = 0;
+  returnStatus = start();
+  if(returnStatus){return(returnStatus);}
+  returnStatus = sendAddress(SLA_W(address));
+  if(returnStatus) {
+    if(returnStatus == 1){return(2);}
+    return(returnStatus);
+  }
+  returnStatus = sendByte(command);
+  if(returnStatus) {
+    if(returnStatus == 1){return(3);}
+    return(returnStatus);
+  }
+  returnStatus = sendByte(hi_addr);
+  if(returnStatus) {
+    if(returnStatus == 1){return(3);}
+    return(returnStatus);
+  }    
+  returnStatus = sendByte(lo_addr);
+  if(returnStatus) {
+    if(returnStatus == 1){return(3);}
+    return(returnStatus);
+  }  
+  for (uint16_t i = 0; i < numberBytes; i++) {
+    returnStatus = sendByte(buffer[i]);
+    if(returnStatus) {
+        if(returnStatus == 1){return(3);}
+        return(returnStatus);
+      }
+  }
+  returnStatus = stop();
+  if(returnStatus) {
+    if(returnStatus == 1){return(7);}
+    return(returnStatus);
+  }
+  return(returnStatus);
+}
 
 uint8_t LumiGeekShield::write(uint8_t address, uint8_t command, uint8_t header, uint8_t* buffer, uint16_t numberBytes) {
   if (debug() && verbose()) {

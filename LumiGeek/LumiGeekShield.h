@@ -29,6 +29,8 @@ class LumiGeekShield {
   	uint8_t write(uint8_t, uint8_t);
   	uint8_t write(uint8_t, uint8_t, uint8_t*, uint16_t);
   	uint8_t write(uint8_t, uint8_t, uint8_t, uint8_t*, uint16_t);  // special case for passing in a header byte separate from a big RGB byte array
+  	uint8_t write(uint8_t, uint8_t, uint8_t, uint8_t, uint8_t*, uint16_t);  // special case for 16bit DMX address and RGB byte array
+      
       
     uint8_t _i2cOffset;  // NOTE: tried to use uint8_t but got an ambiguous compiler error.  Weird.
     uint8_t _actualProductId;
