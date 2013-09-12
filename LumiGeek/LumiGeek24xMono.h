@@ -20,11 +20,11 @@ class LumiGeek24xMono : public LumiGeekShield {
 		LumiGeek24xMono(uint8_t addr) : LumiGeekShield(addr,LG_24XMONO) {};
     bool assertHeaderValue(uint8_t header);
 		void jumpHeaderToBrightness(uint8_t header, uint8_t value);
-		void fadeHeaderToBrightness(uint8_t header, uint8_t value, uint8_t speed);
-		void autoJumpHeaderBetweenBrightnesses(uint8_t header, uint8_t value1, uint8_t value2, uint8_t speed);
-		void autoFadeHeaderBetweenBrightnesses(uint8_t header, uint8_t value1, uint8_t value2, uint8_t speed);
-		void autoFadeHeaderToRandomBrightnesses(uint8_t header, uint8_t speed);
-    void drawFrame(uint8_t brightnessValues[]);
+		//void fadeHeaderToBrightness(uint8_t header, uint8_t value, uint8_t speed);
+		//void autoJumpHeaderBetweenBrightnesses(uint8_t header, uint8_t value1, uint8_t value2, uint8_t speed);
+		//void autoFadeHeaderBetweenBrightnesses(uint8_t header, uint8_t value1, uint8_t value2, uint8_t speed);
+		//void autoFadeHeaderToRandomBrightnesses(uint8_t header, uint8_t speed);
+    void drawFrame(uint8_t* brightnessFrame);
 };
 
 #endif
