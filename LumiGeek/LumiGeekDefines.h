@@ -93,6 +93,11 @@
 
 #define LG_ADDR_CMD_SET_STRIP_MODE 0x58		// 0x58 Header StripMode 
 
+#define LG_ADDR_MODE_WS2811 0x01		
+#define LG_ADDR_MODE_WS2801 0x02		
+#define LG_ADDR_MODE_LPD8606 0x03		
+#define LG_ADDR_MODE_TM1803 0x04		// aka radio shack strip
+
 // Here are some generative macros, limited for now to 256 pixels by the length byte
 
 #define LG_ADDR_CMD_GRADIENT 0x51			// 0x51 Header R1 G1 B1 R2 G2 B1 Length 
