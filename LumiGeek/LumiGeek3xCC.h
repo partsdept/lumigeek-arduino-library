@@ -25,9 +25,9 @@ class LumiGeek3xCC : public LumiGeekRGB {
 		LumiGeek3xCC(uint8_t offset) : LumiGeekRGB(offset,LG_3XCC_1W) {};
 		void jumpToRGB(uint8_t r, uint8_t g, uint8_t b);
 		void fadeToRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t speed);
-		void autoJumpBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
-		void autoFadeBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
-		void autoFadeToRandomRGBs(uint8_t speed);
+		//void autoJumpBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
+		//void autoFadeBetweenRGBs(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed);
+		//void autoFadeToRandomRGBs(uint8_t speed);
 };
 
 #endif
