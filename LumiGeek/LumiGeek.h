@@ -29,7 +29,7 @@
 
 class LumiGeekHelper {
 	public:
-		void begin();
+		void beginIsDepricated();
 };
 
 extern LumiGeekHelper LumiGeek;
