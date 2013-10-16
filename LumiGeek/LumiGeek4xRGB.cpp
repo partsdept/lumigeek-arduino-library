@@ -37,30 +37,30 @@ bool LumiGeek4xRGB::assertHeaderValue(uint8_t header) {
 void LumiGeek4xRGB::jumpHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b) {
   if (assertHeaderValue(header)) {
     genericJumpHeaderToRGB(header,r,g,b);
-    delay(5);
+    delay(8);
   }
 }
 void LumiGeek4xRGB::fadeHeaderToRGB(uint8_t header, uint8_t r, uint8_t g, uint8_t b, uint8_t speed) {
   if (assertHeaderValue(header)) {
   	genericFadeHeaderToRGB(header,r,g,b,speed);
-    delay(5);
+    delay(8);
   }
 }
 void LumiGeek4xRGB::autoJumpHeaderBetweenRGBs(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed) {
   if (assertHeaderValue(header)) {
   	genericAutoJumpHeaderBetweenRGBs(header,r1,g1,b1,r2,g2,b2,speed);
-    delay(5);
+    delay(8);
   }
 }
 void LumiGeek4xRGB::autoFadeHeaderBetweenRGBs(uint8_t header, uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, uint8_t speed) {
   if (assertHeaderValue(header)) {
   	genericAutoFadeHeaderBetweenRGBs(header,r1,g1,b1,r2,g2,b2,speed);
-    delay(5);
+    delay(8);
   }
 }
 void LumiGeek4xRGB::autoFadeHeaderToRandomRGBs(uint8_t header, uint8_t speed) {
   if (assertHeaderValue(header)) {
   	genericAutoFadeHeaderToRandomRGBs(header,speed);
-    delay(5);
+    delay(8);
   }
 }
