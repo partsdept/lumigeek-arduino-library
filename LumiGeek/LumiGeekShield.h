@@ -45,9 +45,6 @@ class LumiGeekShield {
     bool assertProductMatchesI2cAddress();
     bool assertOffsetValue(uint8_t i2cOffset);
 
-  	void blackout();
-  	void testPattern();
-
   	static bool _debug;
   	static bool _verbose;
     static bool _calledBegin;
@@ -85,8 +82,8 @@ class LumiGeekShield {
   	void setVerbose(bool b);
   	void scan();
     bool assertSanityCheck();
-    
-
+  	void blackout();
+  	void testPattern();
 };
 
 #endif

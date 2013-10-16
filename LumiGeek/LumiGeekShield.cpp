@@ -38,13 +38,21 @@ bool LumiGeekShield::assertSanityCheck() {
   // only check productId and dip switch range once
   if (!_initialized) {
     _initialized = true;
-    if (assertProductMatchesI2cAddress()) {
+    if (!assertOffsetValue(_i2cOffset)) {
+      if (debug()) {
+        Serial.println("ERROR: Dip switch value in shield constructor must be in range 0-15.");
+      }
+      _sane = false;
+      return false;
+    } else if (assertProductMatchesI2cAddress()) {
       if (debug()) {
         Serial.print("LUMIGEEK: Shield with dip switch setting 0x");
         Serial.print(_i2cOffset,HEX);
         Serial.print(" has product ID 0x");
         Serial.println(_actualProductId,HEX);
       }
+      _sane = true;
+      return true;
     } else {
       _sane = false;
       if (debug()) {
@@ -56,12 +64,6 @@ bool LumiGeekShield::assertSanityCheck() {
         Serial.println(_i2cOffset,HEX);
         Serial.println("TIP: Make sure you are instantiating the right LumiGeek library class for the right physical shield.");
         Serial.println("TIP: Check your dip switches on the shield against the shield class constructor.");
-      }
-      return false;
-    }
-    if (!assertOffsetValue(_i2cOffset)) {
-      if (debug()) {
-        Serial.println("ERROR: Dip switch value in shield constructor must be in range 0-15.");
       }
       _sane = false;
       return false;
