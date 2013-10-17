@@ -5,7 +5,7 @@ LumiGeek4xRGB lg4xRGB;
 
 void setup() {
   // initialize the I2C bus
-  LumiGeek.begin();
+  lg4xRGB.begin();
   // turn on serial debugging
   lg4xRGB.setDebug(true);
   // instatiate a shield with its dip switches set to 0x0

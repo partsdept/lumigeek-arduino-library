@@ -7,7 +7,7 @@ uint8_t frame[24];
 
 void setup() {
   // initialize the I2C bus
-  LumiGeek.begin();
+  lg24xMono.begin();
   // turn on serial debugging
   lg24xMono.setDebug(true);
   // instatiate a shield with its dip switches set to 0x0

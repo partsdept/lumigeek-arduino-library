@@ -6,7 +6,7 @@ byte loopCounter = 0;
 
 void setup() {
   // initialize the I2C bus
-  LumiGeek.begin();
+  lg1xDMX.begin();
   // turn on serial debugging
   lg1xDMX.setDebug(true);
   // instatiate a shield with its dip switches set to 0x0
