@@ -72,7 +72,7 @@ bool LumiGeekShield::assertSanityCheck() {
 
   if (!calledBegin()) {
     if (debug()) {
-      Serial.println("ERROR: Failed sanity check. Make sure you called LumiGeek.begin() before calling shield functions.");
+      Serial.println("ERROR: Failed sanity check. Make sure you called begin() before calling shield functions.");
     }
     return false;
   }
