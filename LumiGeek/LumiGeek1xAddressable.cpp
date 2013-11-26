@@ -40,6 +40,7 @@ void LumiGeek1xAddressable::drawGradient(uint8_t r1, uint8_t g1, uint8_t b1, uin
   	params[7] = length;
   	write(i2cAddress(),LG_ADDR_CMD_GRADIENT,params,8);
   }
+  delay(5);
 }
 
 void LumiGeek1xAddressable::shiftBufferOnce(uint8_t direction, uint8_t length) {
@@ -81,4 +82,5 @@ void LumiGeek1xAddressable::drawFrame(uint8_t pixelCount, uint8_t pixelRGBs[]) {
   if (assertSanityCheck()) {
     write(i2cAddress(),LG_ADDR_CMD_FRAME,1,pixelRGBs,pixelCount * 3);   // hardcode the header number... this is only a 1X addressable shield
   }
+  delay(15);
 }
